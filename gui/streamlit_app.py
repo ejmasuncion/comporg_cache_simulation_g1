@@ -1,6 +1,11 @@
 # gui/streamlit_app.py
 import streamlit as st
-from source.lru_cache import FACacheSimulator
+
+# ADJUST COMMENTS TO 
+# SWAP BETWEEN MRU AND LRU
+
+# from source.mru_cache import FACacheSimulator
+from source.mru_cache import FACacheSimulator
 
 def render_gui():
     st.set_page_config(page_title="FA+LRU Cache Sim", layout="wide")
@@ -35,14 +40,16 @@ def render_gui():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader("a. Cache Snapshot")
+        st.subheader("Cache Snapshot")
         st.table(st.session_state.sim.cache)
         
-        st.subheader("a.ii Trace Log")
+        st.subheader("Trace Log")
         st.text_area("Log", "\n".join(st.session_state.sim.trace_log), height=200)
 
     with col2:
-        st.subheader("b. Performance")
+        st.subheader("Performance")
+        output = st.session_state.sim.miss_count
         metrics = st.session_state.sim.calculate_metrics()
+
         for k, v in metrics.items():
             st.metric(k, v)
