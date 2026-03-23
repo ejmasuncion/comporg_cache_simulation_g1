@@ -2,9 +2,8 @@
 import random
 
 class TestSequenceGenerator:
-    def __init__(self, num_blocks, words_per_block):
+    def __init__(self, num_blocks):
         self.n = num_blocks
-        self.wpb = words_per_block
 
     def get_sequential(self):
         base_sequence = list(range(2 * self.n))
