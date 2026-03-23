@@ -63,7 +63,7 @@ def render_gui():
     with row1_col1:
         test_choice = st.selectbox(
             "Select Test Case", 
-            ["Manual Input", "Sequential (2n repeated)", "Mid-Repeat Blocks", "Random (0 to 2n)"]
+            ["Manual Input", "Sequential Sequence", "Mid-Repeat Blocks", "Random Sequence"]
         )
 
     # Prepare sequence logic before rendering Col2
@@ -92,11 +92,12 @@ def render_gui():
             if not final_sequence:
                 st.error("Sequence is empty!")
             else:
-                st.session_state.sim.trace_log = []
-                for a in final_sequence:
-                    st.session_state.sim.access(a)
-                st.success("Simulation Complete")
-
+                st.session_state.sim.reset_results()
+                for block_id in final_sequence:
+                    st.session_state.sim.access(block_id)
+                
+                st.toast("Simulation Complete! Metrics updated.", icon="✅")
+                
     st.divider()
 
    # --- Updated CSS for Bubble Metrics ---

@@ -48,3 +48,11 @@ class LRUCacheSimulator:
             "Hit Rate": f"{hr:.2f}%", "Miss Rate": f"{100-hr:.2f}%",
             "AMAT": f"{amat:.2f} ns", "Total Time": f"{total_t} ns"
         }
+
+    def reset_results(self):
+        self.cache = []
+        self.timer = 0
+        self.access_count = 0
+        self.hit_count = 0
+        self.miss_count = 0
+        self.trace_log = []
