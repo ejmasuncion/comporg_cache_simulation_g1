@@ -18,5 +18,5 @@ class TestSequenceGenerator:
         return full_cycle * 2
 
     def get_random(self):
-        blocks = [random.randint(0, 63) for _ in range(20)]
-        return [b * self.wpb for b in blocks]
+        blocks = [random.randint(0, 2 * self.n) for _ in range(64)]
+        return blocks
