@@ -4,6 +4,7 @@ from source.lru_cache import LRUCacheSimulator
 from source.mru_cache import MRUCacheSimulator
 from source.test_cases import TestSequenceGenerator
 
+
 def render_gui():
     st.set_page_config(page_title="Cache Simulator", layout="wide")
     st.title("🖥️ Fully Associative Cache Simulator")
