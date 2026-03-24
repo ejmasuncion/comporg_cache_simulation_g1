@@ -1,4 +1,3 @@
-# gui/streamlit_app.py
 import streamlit as st
 import pandas as pd
 from source.lru_cache import LRUCacheSimulator
@@ -32,7 +31,6 @@ def render_gui():
     
     with r2_c3:
         if st.button("Initialize / Reset Cache", use_container_width=True):
-            # Save the parameters so we can precisely rebuild the cache when stepping backwards
             st.session_state.sim_params = {
                 'policy': policy, 'w_p_b': w_p_b, 'n_b': n_b, 'h_t': h_t, 'm_t': m_t
             }
@@ -100,7 +98,6 @@ def render_gui():
     if not final_sequence:
         st.warning("Sequence is empty!")
     else:
-        # Created 4 columns to fit the new "Step Back" button
         b_c1, b_c2, b_c3, b_c4 = st.columns(4)
         
         with b_c1:
@@ -108,14 +105,12 @@ def render_gui():
                 if st.session_state.step_index > 0:
                     st.session_state.step_index -= 1
                     
-                    # Rebuild the simulator state from scratch up to the new step_index
                     p = st.session_state.sim_params
                     if p['policy'] == "LRU":
                         st.session_state.sim = LRUCacheSimulator(p['w_p_b'], p['n_b'], p['h_t'], p['m_t'])
                     else:
                         st.session_state.sim = MRUCacheSimulator(p['w_p_b'], p['n_b'], p['h_t'], p['m_t'])
                     
-                    # Fast-forward simulation to the current step
                     for i in range(st.session_state.step_index):
                         st.session_state.sim.access(final_sequence[i])
 
@@ -142,7 +137,6 @@ def render_gui():
                 st.session_state.step_index = 0
                 st.toast("Sequence restarted and cache cleared.", icon="🔄")
 
-        # Progress Indicator
         progress_val = st.session_state.step_index / len(final_sequence) if final_sequence else 0
         st.progress(progress_val)
         
@@ -160,7 +154,21 @@ def render_gui():
         st.subheader("Cache Memory Snapshot")
         if st.session_state.sim.cache:
             df_cache = pd.DataFrame(st.session_state.sim.cache)
-            st.dataframe(df_cache, hide_index=True) 
+            
+            def highlight_last_row(row):
+                idx = row.name 
+                sim = st.session_state.sim
+                
+                if idx == sim.last_accessed_idx:
+                    if sim.last_result == "HIT":
+                        return ['background-color: rgba(0, 255, 0, 0.3)'] * len(row) # Light Green
+                    elif sim.last_result == "MISS":
+                        return ['background-color: rgba(255, 0, 0, 0.3)'] * len(row) # Light Red
+                return [''] * len(row)
+
+            styled_df = df_cache.style.apply(highlight_last_row, axis=1)
+            
+            st.dataframe(styled_df, hide_index=True, use_container_width=True) 
         else:
             st.info("Cache is empty.")
 
@@ -172,8 +180,8 @@ def render_gui():
             st.text_area("Activity Log", value="", height=300)
 
     st.divider()
-
-    # --- Updated CSS for Bubble Metrics ---
+    
+    # --- 5. Performance Metrics ---
     st.markdown("""
         <style>
             .metric-bubble {
