@@ -7,6 +7,7 @@ import streamlit as st
 # from source.mru_cache import FACacheSimulator
 from source.mru_cache import FACacheSimulator
 
+
 def render_gui():
     st.set_page_config(page_title="FA+LRU Cache Sim", layout="wide")
     st.title("🖥️ Cache Simulator (FA + LRU)")

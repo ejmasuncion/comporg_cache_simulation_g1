@@ -1,4 +1,7 @@
 # logic/lru.py
+
+# Step through cache,  feature
+
 class FACacheSimulator:
     def __init__(self, words_per_block, num_blocks, hit_time, miss_time):
         self.words_per_block = words_per_block
