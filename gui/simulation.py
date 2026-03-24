@@ -1,101 +1,178 @@
+# gui/streamlit_app.py
 import streamlit as st
-from source.mru_cache import FACacheSimulator
+from source.lru_cache import LRUCacheSimulator
+from source.mru_cache import MRUCacheSimulator
+from source.test_cases import TestSequenceGenerator
+
 
 def render_gui():
-    st.set_page_config(page_title="FA+LRU Cache Sim", layout="wide")
-    st.title("🖥️ Cache Simulator (FA + LRU)")
+    st.set_page_config(page_title="Cache Simulator", layout="wide")
+    st.title("🖥️ Fully Associative Cache Simulator")
 
-    # Sidebar for Parameters
-    with st.sidebar:
-        st.header("1. Parameters")
-        w_p_b = st.number_input("Words per Block (Power of 2)", value=4, step=1)
-        n_b = st.number_input("Cache Blocks (Power of 2)", value=4, step=1)
-        h_t = st.number_input("Hit Time (ns)", value=1)
-        m_t = st.number_input("Miss Penalty (ns)", value=100)
-        
-        if st.button("Reset Cache"):
-            st.session_state.sim = FACacheSimulator(w_p_b, n_b, h_t, m_t)
-            st.session_state.history = []
-            st.session_state.step_index = 0  # Reset the step counter
-
-    # Initialize Session State
-    if 'sim' not in st.session_state:
-        st.session_state.sim = FACacheSimulator(w_p_b, n_b, h_t, m_t)
-        st.session_state.history = []
-        st.session_state.step_index = 0
-        st.info("Adjust parameters and click 'Reset Cache' to start.")
-
-    # Main Input
-    addr_input = st.text_input("Enter Memory Addresses (comma separated)", "0, 4, 8, 0, 12")
+    # --- 1. Configuration Section (Horizontal) ---
+    st.subheader("Configuration")
     
-    # Safely parse the input string into a list of integers
-    try:
-        addrs = [int(x.strip()) for x in addr_input.split(",") if x.strip() != ""]
-    except ValueError:
-        st.error("Please ensure all inputs are valid integers separated by commas.")
-        addrs = []
-
-
-    # Reset the step index if the user modifies the input string
-    if 'last_input' not in st.session_state or st.session_state.last_input != addr_input:
-        st.session_state.last_input = addr_input
-        st.session_state.step_index = 0
-
-    # Simulation Controls
-    st.subheader("Simulation Controls")
-    col_btn1, col_btn2 = st.columns([1, 1])
+    # Create 5 columns for parameters and the reset button
+    col_layout = [1, 1, 1, 1, 1]
     
-    with col_btn1:
-        if st.button("Step ➡️", use_container_width=True):
-            if st.session_state.step_index < len(addrs):
-                current_addr = addrs[st.session_state.step_index]
-                st.session_state.sim.access(current_addr)
-                st.session_state.step_index += 1
+    # First Row: Numeric Inputs
+    c1, c2, c3, c4, c5 = st.columns(col_layout)
+
+    power_of_2_options = [2**i for i in range(11)]
+    
+    with c1:
+        policy = st.selectbox("Replacement Policy", ["LRU", "MRU"])
+    with c2:
+        # Use selectbox to ensure only power-of-2 values are chosen
+        w_p_b = st.selectbox("Words/Block", options=power_of_2_options, index=2) # Default to 4
+    with c3:
+        # Use selectbox for Cache Blocks as well
+        n_b = st.selectbox("Cache Blocks", options=power_of_2_options, index=2) # Default to 4
+    with c4:
+        h_t = st.number_input("Hit Time (ns)", value=1, min_value=1)
+    with c5:
+        m_t = st.number_input("Miss Penalty (ns)", value=100, min_value=1)
+
+    # Center the Reset button slightly
+    r2_c1, r2_c2, r2_c3, r2_c4, r2_c5 = st.columns(col_layout)
+    
+    with r2_c3:
+        if st.button("Initialize / Reset Cache", use_container_width=True):
+            if policy == "LRU":
+                st.session_state.sim = LRUCacheSimulator(w_p_b, n_b, h_t, m_t)
             else:
-                st.warning("End of instruction sequence reached. Modify the input or click 'Reset Cache'.")
-
-    with col_btn2:
-        if st.button("Simulate All ⏩", use_container_width=True):
-            # Simulate whatever is left in the sequence
-            while st.session_state.step_index < len(addrs):
-                current_addr = addrs[st.session_state.step_index]
-                st.session_state.sim.access(current_addr)
-                st.session_state.step_index += 1
-            st.success("Simulation Complete!")
-
-    # Display progress
-    if addrs:
-        progress_val = st.session_state.step_index / len(addrs)
-        st.progress(progress_val)
-        
-        if st.session_state.step_index < len(addrs):
-            next_addr = addrs[st.session_state.step_index]
-            st.markdown(f"**Step {st.session_state.step_index} / {len(addrs)}** | **Next Address:** `{next_addr}`")
-        else:
-            st.markdown(f"**Step {st.session_state.step_index} / {len(addrs)}** | 🎉 **All instructions processed!**")
+                st.session_state.sim = MRUCacheSimulator(w_p_b, n_b, h_t, m_t)
+            
+            st.session_state.current_policy = policy
+            st.session_state.test_gen = TestSequenceGenerator(n_b)
+            st.toast(f"Initialized {policy} Cache", icon="✅")
 
     st.divider()
 
+    st.divider()
 
-    # Layout: Snapshot and Metrics
-    col1, col2 = st.columns([2, 1])
-    
-    with col1:
-        st.subheader("Cache Snapshot")
-        st.table(st.session_state.sim.cache)
-        
-        st.subheader("Trace Log")
-        st.text_area("Log", "\n".join(st.session_state.sim.trace_log), height=200)
+    if 'sim' not in st.session_state:
+        st.info("Please initialize the cache above to begin.")
+        return
 
-    with col2:
-        st.subheader("Performance")
-        # Handle cases where the cache might not have calculating methods yet
-        if hasattr(st.session_state.sim, 'calculate_metrics'):
-            metrics = st.session_state.sim.calculate_metrics()
-            for k, v in metrics.items():
-                st.metric(k, v)
+    # --- 2. Access Sequence (25/75 Split on One Row) ---
+    st.subheader("Access Sequence")
+
+    # This creates one row: Col1 (25%) | Col2 (75%)
+    row1_col1, row1_col2 = st.columns([1, 3])
+
+    with row1_col1:
+        test_choice = st.selectbox(
+            "Select Test Case", 
+            ["Manual Input", "Sequential Sequence", "Mid-Repeat Blocks", "Random Sequence"]
+        )
+
+    # Prepare sequence logic before rendering Col2
+    final_sequence = []
+    if test_choice != "Manual Input":
+        gen = st.session_state.test_gen
+        if test_choice == "Sequential Sequence":
+            final_sequence = gen.get_sequential()
+        elif test_choice == "Mid-Repeat Blocks":
+            final_sequence = gen.get_mid_repeat()
+        elif test_choice == "Random Sequence":
+            final_sequence = gen.get_random()
+
+    with row1_col2:
+        if test_choice == "Manual Input":
+            addr_input = st.text_input("Enter Block IDs (comma separated)", "0, 1, 2, 3")
+            if addr_input:
+                final_sequence = [int(x.strip()) for x in addr_input.split(",") if x.strip()]
         else:
-            st.metric("Miss Count", getattr(st.session_state.sim, 'miss_count', 0))
+            st.code(f"{final_sequence}", language="python")
 
-if __name__ == "__main__":
-    render_gui()
+    # --- 3. Simulation Button (Centered Below) ---
+    b_c1, b_c2, b_c3 = st.columns([2, 1, 2])
+    with b_c2:
+        if st.button("🚀 Run Simulation", use_container_width=True):
+            if not final_sequence:
+                st.error("Sequence is empty!")
+            else:
+                st.session_state.sim.reset_results()
+                for block_id in final_sequence:
+                    st.session_state.sim.access(block_id)
+                
+                st.toast("Simulation Complete! Metrics updated.", icon="✅")
+                
+    st.divider()
+
+   # --- Updated CSS for Bubble Metrics ---
+    st.markdown("""
+        <style>
+            .metric-bubble {
+                background-color: #f0f2f6;
+                border: 2px solid #e0e0e0;
+                border-radius: 15px;
+                padding: 15px;
+                text-align: center;
+                margin-bottom: 10px;
+                box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+            }
+            .metric-label {
+                font-size: 0.9rem;
+                color: #5f6368;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+            .metric-value {
+                font-size: 1.4rem;
+                color: #0e1117;
+                font-weight: 800;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    st.divider()
+    st.subheader("Performance Metrics")
+    
+    metrics = st.session_state.sim.calculate_metrics()
+
+    # Helper function to render a bubble
+    def metric_bubble(label, value):
+        st.markdown(f"""
+            <div class="metric-bubble">
+                <div class="metric-label">{label}</div>
+                <div class="metric-value">{value}</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    # Top Row: 3 Metrics (Access, Hits, Misses)
+    m_col1, m_col2, m_col3 = st.columns(3)
+    with m_col1:
+        metric_bubble("Memory Access Count", metrics["Access Count"])
+    with m_col2:
+        metric_bubble("Cache Hit Count", metrics["Hits"])
+    with m_col3:
+        metric_bubble("Cache Miss Count", metrics["Misses"])
+
+    # Bottom Row: 4 Metrics (Hit Rate, Miss Rate, AMAT, TMAT)
+    m_col4, m_col5, m_col6, m_col7 = st.columns(4)
+    with m_col4:
+        metric_bubble("Hit Rate", metrics["Hit Rate"])
+    with m_col5:
+        metric_bubble("Miss Rate", metrics["Miss Rate"])
+    with m_col6:
+        metric_bubble("Avg Access Time", metrics["AMAT"])
+    with m_col7:
+        metric_bubble("Total Access Time", metrics["Total Time"])
+
+    st.divider()
+
+    # --- 4. Snapshots and Logs ---
+    col_snap, col_log = st.columns([1, 1])
+    
+    with col_snap:
+        st.subheader("a. Cache Memory Snapshot")
+        if st.session_state.sim.cache:
+            st.table(st.session_state.sim.cache)
+        else:
+            st.info("Cache is empty.")
+
+    with col_log:
+        st.subheader("a.ii Trace Log")
+        st.text_area("Activity Log", value="\n".join(st.session_state.sim.trace_log), height=300)
