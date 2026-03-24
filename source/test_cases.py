@@ -1,4 +1,3 @@
-# source/test_cases.py
 import random
 
 class TestSequenceGenerator:
@@ -17,5 +16,5 @@ class TestSequenceGenerator:
         return full_cycle * 2
 
     def get_random(self):
-        blocks = [random.randint(0, 2 * self.n) for _ in range(64)]
+        blocks = [random.randint(0, 1023) for _ in range(64)]
         return blocks

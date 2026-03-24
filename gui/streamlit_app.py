@@ -1,5 +1,6 @@
 # gui/streamlit_app.py
 import streamlit as st
+import pandas as pd
 from source.lru_cache import LRUCacheSimulator
 from source.mru_cache import MRUCacheSimulator
 from source.test_cases import TestSequenceGenerator
@@ -152,6 +153,26 @@ def render_gui():
 
     st.divider()
 
+    # --- 4. Snapshots and Logs ---
+    col_snap, col_log = st.columns([1, 1])
+    
+    with col_snap:
+        st.subheader("Cache Memory Snapshot")
+        if st.session_state.sim.cache:
+            df_cache = pd.DataFrame(st.session_state.sim.cache)
+            st.dataframe(df_cache, hide_index=True) 
+        else:
+            st.info("Cache is empty.")
+
+    with col_log:
+        st.subheader("Trace Log")
+        if hasattr(st.session_state.sim, 'trace_log'):
+            st.text_area("Activity Log", value="\n".join(st.session_state.sim.trace_log), height=300)
+        else:
+            st.text_area("Activity Log", value="", height=300)
+
+    st.divider()
+
     # --- Updated CSS for Bubble Metrics ---
     st.markdown("""
         <style>
@@ -207,26 +228,3 @@ def render_gui():
         metric_bubble("Avg Access Time", metrics.get("AMAT", "0 ns"))
     with m_col7:
         metric_bubble("Total Access Time", metrics.get("Total Time", "0 ns"))
-
-    st.divider()
-
-    # --- 4. Snapshots and Logs ---
-    col_snap, col_log = st.columns([1, 1])
-    
-    with col_snap:
-        st.subheader("a. Cache Memory Snapshot")
-        if hasattr(st.session_state.sim, 'cache') and st.session_state.sim.cache:
-            st.table(st.session_state.sim.cache)
-            st.markdown
-        else:
-            st.info("Cache is empty.")
-
-    with col_log:
-        st.subheader("a.ii Trace Log")
-        if hasattr(st.session_state.sim, 'trace_log'):
-            st.text_area("Activity Log", value="\n".join(st.session_state.sim.trace_log), height=300)
-        else:
-            st.text_area("Activity Log", value="", height=300)
-
-if __name__ == "__main__":
-    render_gui()
