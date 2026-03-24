@@ -63,9 +63,18 @@ class MRUCacheSimulator:
         return "MISS"
 
     def calculate_metrics(self):
-        hr = (self.hit_count / self.access_count * 100) if self.access_count > 0 else 0
+        cache_access_time = self.hit_time
+        memory_access_time = self.miss_time
+
+        # non-load through instruction
+        miss_penalty = cache_access_time + self.num_blocks*memory_access_time + cache_access_time
+
+        hr = ((self.hit_count / self.access_count) * 100) if self.access_count > 0 else 0
+
         total_t = (self.hit_count * self.hit_time) + (self.miss_count * (self.miss_time + self.hit_time))
-        amat = total_t / self.access_count if self.access_count > 0 else 0
+        # amat = total_t / self.access_count if self.access_count > 0 else 0
+
+        amat = (hr/100 * self.num_blocks) + (1- hr/100) * (miss_penalty)
         return {
             "Access Count": self.access_count,
             "Hits": self.hit_count, 

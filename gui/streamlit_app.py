@@ -23,9 +23,11 @@ def render_gui():
     with c3:
         n_b = st.selectbox("Cache Blocks", options=power_of_2_options, index=2)
     with c4:
-        h_t = st.number_input("Hit Time (ns)", value=1, min_value=1)
+        # Replace to cache access time
+        h_t = st.number_input("Cache Access Time (ns)", value=1, min_value=1)
     with c5:
-        m_t = st.number_input("Miss Penalty (ns)", value=100, min_value=1)
+        # Replace to memory access time
+        m_t = st.number_input("Memory Access Time (ns)", value=100, min_value=1)
 
     r2_c1, r2_c2, r2_c3, r2_c4, r2_c5 = st.columns(col_layout)
     

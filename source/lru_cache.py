@@ -63,9 +63,22 @@ class LRUCacheSimulator:
         return "MISS"
 
     def calculate_metrics(self):
-        hr = (self.hit_count / self.access_count * 100) if self.access_count > 0 else 0
-        total_t = (self.hit_count * self.hit_time) + (self.miss_count * (self.miss_time + self.hit_time))
-        amat = total_t / self.access_count if self.access_count > 0 else 0
+        cache_access_time = self.hit_time
+        memory_access_time = self.miss_time
+
+        # non-load through instruction
+        miss_penalty = cache_access_time + self.words_per_block*memory_access_time + cache_access_time
+
+        hr = ((self.hit_count / self.access_count) * 100) if self.access_count > 0 else 0   # Hit rate in percentage
+        hr_decimal = hr/100 # Hit rate in decimal
+
+
+        total_t = (self.words_per_block*self.hit_count)*cache_access_time + (cache_access_time + self.words_per_block*memory_access_time+(cache_access_time*self.words_per_block))*self.miss_count
+        # total_t = (self.hit_count * self.hit_time) + (self.miss_count * (self.miss_time + self.hit_time))
+        # amat = total_t / self.access_count if self.access_count > 0 else 0
+
+        amat = (hr_decimal* cache_access_time) + (1- (hr_decimal)) * (miss_penalty)
+
         return {
             "Access Count": self.access_count,
             "Hits": self.hit_count, 
