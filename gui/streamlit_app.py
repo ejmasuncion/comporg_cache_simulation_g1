@@ -147,6 +147,18 @@ def render_gui():
         else:
             st.markdown(f"**Step {st.session_state.step_index} / {len(final_sequence)}** | 🎉 **All instructions processed!**")
 
+            # Option to print to textfile
+            if st.session_state.sim.cache:
+                out_cache = pd.DataFrame(st.session_state.sim.cache)
+                csv = out_cache.to_string()
+                st.download_button(
+                    label = "Download Final Memory Snapshot",
+                    data = csv,
+                    file_name="output.txt",
+                    mime="text/plain"
+                )
+
+
     st.divider()
 
     # --- 4. Snapshots and Logs ---

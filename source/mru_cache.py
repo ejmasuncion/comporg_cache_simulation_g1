@@ -1,3 +1,4 @@
+
 class MRUCacheSimulator:
     def __init__(self, words_per_block, num_blocks, hit_time, miss_time):
         self.words_per_block = words_per_block
@@ -70,11 +71,14 @@ class MRUCacheSimulator:
         miss_penalty = cache_access_time + self.num_blocks*memory_access_time + cache_access_time
 
         hr = ((self.hit_count / self.access_count) * 100) if self.access_count > 0 else 0
+        hr_decimal = hr/100
 
-        total_t = (self.hit_count * self.hit_time) + (self.miss_count * (self.miss_time + self.hit_time))
+        total_t = (self.words_per_block*self.hit_count)*cache_access_time + (cache_access_time + self.words_per_block*memory_access_time+(cache_access_time*self.words_per_block))*self.miss_count
+        # total_t = (self.hit_count * self.hit_time) + (self.miss_count * (self.miss_time + self.hit_time))
         # amat = total_t / self.access_count if self.access_count > 0 else 0
 
-        amat = (hr/100 * self.num_blocks) + (1- hr/100) * (miss_penalty)
+        amat = (hr_decimal * cache_access_time) + (1- hr_decimal) * miss_penalty
+
         return {
             "Access Count": self.access_count,
             "Hits": self.hit_count, 
