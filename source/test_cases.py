@@ -12,7 +12,7 @@ class TestSequenceGenerator:
         middle = list(range(0, self.n))
         suffix = list(range(self.n, 2 * self.n))
         
-        full_cycle = middle + middle + suffix
+        full_cycle = middle + middle[1:self.n] + suffix
         return full_cycle * 2
 
     def get_random(self):
